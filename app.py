@@ -166,13 +166,13 @@ def validate_entry(entry: dict, word: str) -> list:
 # ── 路由 ─────────────────────────────────────────────────
 
 @app.get("/")
-def serve_input_page():
-    return send_from_directory(app.static_folder, "input.html")
-
-
-@app.get("/view")
-def serve_view_page():
+def serve_dictionary_page():
     return send_from_directory(app.static_folder, "index.html")
+
+
+@app.get("/add")
+def serve_add_page():
+    return send_from_directory(app.static_folder, "input.html")
 
 
 @app.get("/api/health")
