@@ -21,9 +21,10 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            line-height: 1.6;
+            line-height: 1.7;
+            font-size: 18px;
         }
-        h2 { color: var(--primary); text-align: center; margin-bottom: 25px;
+        h2 { color: var(--primary); text-align: center; margin-bottom: 25px; font-size: 1.6em;
         }
         .controls { 
             display: flex;
@@ -49,7 +50,7 @@
             gap: 10px;
             flex-wrap: wrap;
         }
-        .upload-btn, .delete-btn, .clear-btn {
+        .upload-btn, .delete-btn, .clear-btn, .export-btn {
             flex: 1;
             min-width: 140px;
             display: block;
@@ -76,7 +77,11 @@
             background-color: #e74c3c;
             box-shadow: 0 4px 6px rgba(231, 76, 60, 0.2);
         }
-        .upload-btn:hover, .delete-btn:hover, .clear-btn:hover { opacity: 0.9;
+        .export-btn {
+            background-color: #27ae60;
+            box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
+        }
+        .upload-btn:hover, .delete-btn:hover, .clear-btn:hover, .export-btn:hover { opacity: 0.9;
         }
         #csvFileInput { display: none;
         }
@@ -86,7 +91,7 @@
             padding: 12px 15px;
             border: 1px solid var(--border);
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 17px;
             box-sizing: border-box;
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
             background-color: white;
@@ -107,7 +112,7 @@
         margin-bottom: 10px; }
         .card-title-group { display: flex; align-items: center; gap: 12px;
         }
-        .word-title { font-size: 1.6em; font-weight: bold; color: var(--primary); margin: 0;
+        .word-title { font-size: 1.8em; font-weight: bold; color: var(--primary); margin: 0;
         }
         
         .circle-checkbox {
@@ -140,16 +145,16 @@
             border-color: #e67e22;
         }
 
-        .ipa { font-family: "Courier New", Courier, monospace; color: var(--text-muted); font-size: 0.9em;
+        .ipa { font-family: "Courier New", Courier, monospace; color: var(--text-muted); font-size: 1em;
         }
-        .translation { font-size: 1.1em; font-weight: 500; color: #27ae60; margin-bottom: 15px; padding-left: 34px;
+        .translation { font-size: 1.2em; font-weight: 500; color: #27ae60; margin-bottom: 15px; padding-left: 34px;
         }
         .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; padding-left: 34px;
         }
         .tag {
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: 20px;
-            font-size: 0.8em;
+            font-size: 0.9em;
             font-weight: bold;
             background-color: #e8f4fd;
             color: var(--accent);
@@ -162,9 +167,9 @@
         }
         .section { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 12px; margin-left: 34px;
         }
-        .section-title { font-size: 0.85em; color: #95a5a6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        .section-title { font-size: 0.95em; color: #95a5a6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
         font-weight: bold; }
-        .content-text { white-space: pre-wrap; font-size: 0.95em; color: #444;
+        .content-text { white-space: pre-wrap; font-size: 1.05em; color: #444;
         }
         .audio-link {
             display: inline-block;
@@ -188,10 +193,8 @@
 <body>
 
     <h2>📚 詞彙庫 雲端版</h2>
-    <div style="text-align:center; margin-bottom:20px;">
-        <a href="/add" style="color:#3498db; text-decoration:none; font-weight:600;">➕ 新增詞語</a>
-    </div>
-
+    
+    <div style="text-align:center; margin-bottom:20px;"><a href="/add" style="color:#3498db; text-decoration:none; font-weight:600;">➕ 新增詞語</a></div>
     <div class="controls">
         <div class="import-options">
             <label><input type="radio" name="importMode" value="append" checked> ➕ 附加到現有資料</label>
@@ -199,7 +202,7 @@
         </div>
         <div class="btn-container">
             <label for="csvFileInput" class="upload-btn">📁 點此匯入 CSV 檔案</label>
-   
+            <button class="export-btn" id="exportBtn">💾 備份下載 CSV</button>
             <button class="delete-btn" id="deleteBtn">❌ 刪除選取項目</button>
             <button class="clear-btn" id="clearBtn">🗑️ 清除所有資料</button>
         </div>
@@ -207,8 +210,8 @@
         <input type="text" id="searchInput" placeholder="🔍 搜尋單字、翻譯或例句內容...">
         
         <select id="sortSelect">
-            <option value="oldest">🕘 新增時間 (最舊優先)</option>
             <option value="newest">🕘 新增時間 (最新優先)</option>
+            <option value="oldest">🕘 新增時間 (最舊優先)</option>
             <option value="asc">🔤 單字排序 (A → Z 遞增)</option>
             <option value="desc">🔤 單字排序 (Z → A 遞減)</option>
         </select>
@@ -253,6 +256,7 @@
         document.getElementById('sortSelect').addEventListener('change', displayData);
         document.getElementById('deleteBtn').addEventListener('click', deleteSelected);
         document.getElementById('clearBtn').addEventListener('click', clearDictionary);
+        document.getElementById('exportBtn').addEventListener('click', exportCSV);
         
         async function loadDataFromCloud() {
             document.getElementById('statusText').innerText = '正在讀取雲端資料...';
@@ -446,6 +450,38 @@
                 }
             }
             return data;
+        }
+
+        function exportCSV() {
+            if (dictionaryData.length === 0) {
+                alert('目前字庫為空，無法匯出。');
+                return;
+            }
+            const fields = [
+                'word_or_phrase','translation','meaning','part_of_speech',
+                'pronunciation_ipa','derived_or_related','relationship_menu',
+                'cross_reference','entry_type','pronunciation_link',
+                'register_and_variety','collocations_and_expressions',
+                'source','additional_notes','ai_agent'
+            ];
+            const escape = val => {
+                const s = (val ?? '').toString();
+                return s.includes(',') || s.includes('"') || s.includes('\n')
+                    ? '"' + s.replace(/"/g, '""') + '"'
+                    : s;
+            };
+            const rows = [fields.join(',')];
+            dictionaryData.forEach(item => {
+                rows.push(fields.map(f => escape(item[f])).join(','));
+            });
+            const blob = new Blob(['\uFEFF' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const date = new Date().toISOString().slice(0,10);
+            a.href = url;
+            a.download = `dictionary_backup_${date}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         function renderCards(data) {
