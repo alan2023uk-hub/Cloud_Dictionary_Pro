@@ -205,7 +205,7 @@ async function runQueue() {
                     .limit(1);
                 if (error) throw error;
                 if (data && data.length > 0) {
-                    card.setSkipped('雲端已存在此詞彇，已略過。');
+                    card.setSkipped('雲端已存在此詞語，已略過。');
                     continue;
                 }
             } catch (e) {
