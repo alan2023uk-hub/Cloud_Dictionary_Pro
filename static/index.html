@@ -14,40 +14,6 @@
             --text-muted: #666666;
             --border: #e1e8ed;
         }
-
-        /* ── Login overlay ── */
-        #loginOverlay {
-            position: fixed; inset: 0;
-            background: var(--bg);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 9999;
-        }
-        #loginBox {
-            background: #fff;
-            padding: 40px 32px;
-            border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.10);
-            width: 100%; max-width: 420px;
-            text-align: center;
-        }
-        #loginBox h3 { color: var(--primary); font-size: 1.5em; margin-bottom: 8px; }
-        #loginBox p  { color: var(--text-muted); font-size: 1em; margin-bottom: 24px; }
-        #loginEmail {
-            width: 100%; padding: 12px 14px; font-size: 1em;
-            border: 1px solid var(--border); border-radius: 8px;
-            box-sizing: border-box; margin-bottom: 14px; font-family: inherit;
-        }
-        #loginEmail:focus { outline: none; border-color: var(--accent); }
-        #sendMagicLinkBtn {
-            width: 100%; padding: 13px; font-size: 1em; font-weight: bold;
-            background: var(--accent); color: #fff; border: none;
-            border-radius: 8px; cursor: pointer;
-        }
-        #sendMagicLinkBtn:hover { opacity: 0.9; }
-        #sendMagicLinkBtn:disabled { background: #95a5a6; cursor: not-allowed; }
-        #loginMsg { margin-top: 14px; font-size: 0.95em; color: var(--text-muted); min-height: 24px; }
-
-        /* ── Main app ── */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
@@ -59,26 +25,13 @@
             font-size: 22px;
         }
         h2 { color: var(--primary); text-align: center; margin-bottom: 10px; font-size: 1.8em; }
-        .top-nav {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
-        }
-        .top-nav a { color: var(--accent); text-decoration: none; font-weight: 600; }
-        .user-info { font-size: 0.85em; color: var(--text-muted); display: flex; align-items: center; gap: 10px; }
-        .logout-btn {
-            padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
-            background: #fff; color: var(--primary); cursor: pointer; font-size: 0.85em; font-weight: 600;
-        }
-        .logout-btn:hover { background: var(--bg); }
-
         .controls { 
             display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; 
             background: #fff; padding: 20px; border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
         .import-options {
-            display: flex; gap: 20px; font-size: 1em;
-            color: var(--primary); font-weight: 500;
+            display: flex; gap: 20px; font-size: 1em; color: var(--primary); font-weight: 500;
         }
         .import-options label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
         .btn-container { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -94,7 +47,6 @@
         .export-btn { background-color: #27ae60; box-shadow: 0 4px 6px rgba(39,174,96,0.2); }
         .upload-btn:hover, .delete-btn:hover, .clear-btn:hover, .export-btn:hover { opacity: 0.9; }
         #csvFileInput { display: none; }
-
         #searchInput, #sortSelect {
             width: 100%; padding: 12px 15px; border: 1px solid var(--border);
             border-radius: 8px; font-size: 20px; box-sizing: border-box;
@@ -102,7 +54,6 @@
         }
         #searchInput:focus, #sortSelect:focus { outline: none; border-color: var(--accent); }
         #sortSelect { cursor: pointer; }
-
         .card {
             background-color: var(--card-bg); padding: 20px; border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;
@@ -113,8 +64,7 @@
         .circle-checkbox {
             appearance: none; -webkit-appearance: none;
             width: 26px; height: 26px; border: 2px solid #bdc3c7; border-radius: 50%;
-            outline: none; cursor: pointer; display: flex; align-items: center;
-            justify-content: center; transition: background-color 0.2s, border-color 0.2s;
+            outline: none; cursor: pointer; transition: background-color 0.2s, border-color 0.2s;
             margin: 0; flex-shrink: 0;
         }
         .circle-checkbox:checked { background-color: #e67e22; border-color: #e67e22; }
@@ -138,76 +88,47 @@
         .audio-link:hover { background-color: #dfe4ea; }
         .empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
         .status-text { text-align: right; font-size: 1em; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px; }
-        .owner-only { display: none; }
     </style>
 </head>
 <body>
 
-    <!-- Login overlay (shown until authenticated) -->
-    <div id="loginOverlay">
-        <div id="loginBox">
-            <h3>📚 詞彙庫 雲端版</h3>
-            <p>請輸入您的電子郵件<br>以接收一次性登入連結</p>
-            <input type="email" id="loginEmail" placeholder="your@email.com">
-            <button id="sendMagicLinkBtn">傳送登入連結 ✉️</button>
-            <div id="loginMsg"></div>
-        </div>
+    <h2>📚 詞彙庫 雲端版</h2>
+    <div style="text-align:center; margin-bottom:20px;">
+        <a href="/add" style="color:#3498db; text-decoration:none; font-weight:600;">➕ 新增詞語</a>
     </div>
 
-    <!-- Main app (hidden until authenticated) -->
-    <div id="appContent" style="display:none;">
-
-        <h2>📚 詞彙庫 雲端版</h2>
-
-        <div class="top-nav">
-            <a href="/add">➕ 新增詞語</a>
-            <div class="user-info">
-                <span id="userEmailDisplay"></span>
-                <button class="logout-btn" id="logoutBtn">登出</button>
-            </div>
+    <div class="controls">
+        <div class="import-options">
+            <label><input type="radio" name="importMode" value="append" checked> ➕ 附加到現有資料</label>
+            <label><input type="radio" name="importMode" value="replace"> 🔄 替換現有資料</label>
         </div>
-
-        <div class="controls">
-            <!-- Owner-only controls -->
-            <div class="import-options owner-only">
-                <label><input type="radio" name="importMode" value="append" checked> ➕ 附加到現有資料</label>
-                <label><input type="radio" name="importMode" value="replace"> 🔄 替換現有資料</label>
-            </div>
-            <div class="btn-container">
-                <label for="csvFileInput" class="upload-btn owner-only">📁 匯入 CSV 檔案</label>
-                <button class="export-btn owner-only" id="exportBtn">💾 備份下載 CSV</button>
-                <button class="delete-btn owner-only" id="deleteBtn">❌ 刪除選取項目</button>
-                <button class="clear-btn owner-only" id="clearBtn">🗑️ 清除所有資料</button>
-            </div>
-            <input type="file" id="csvFileInput" accept=".csv" multiple>
-            <input type="text" id="searchInput" placeholder="🔍 搜尋單字、翻譯或例句內容...">
-            <select id="sortSelect">
-                <option value="newest">🕘 新增時間 (最新優先)</option>
-                <option value="oldest">🕘 新增時間 (最舊優先)</option>
-                <option value="asc">🔤 單字排序 (A → Z 遞增)</option>
-                <option value="desc">🔤 單字排序 (Z → A 遞減)</option>
-            </select>
+        <div class="btn-container">
+            <label for="csvFileInput" class="upload-btn">📁 匯入 CSV 檔案</label>
+            <button class="export-btn" id="exportBtn">💾 備份下載 CSV</button>
+            <button class="delete-btn" id="deleteBtn">❌ 刪除選取項目</button>
+            <button class="clear-btn" id="clearBtn">🗑️ 清除所有資料</button>
         </div>
+        <input type="file" id="csvFileInput" accept=".csv" multiple>
+        <input type="text" id="searchInput" placeholder="🔍 搜尋單字、翻譯或例句內容...">
+        <select id="sortSelect">
+            <option value="newest">🕘 新增時間 (最新優先)</option>
+            <option value="oldest">🕘 新增時間 (最舊優先)</option>
+            <option value="asc">🔤 單字排序 (A → Z 遞增)</option>
+            <option value="desc">🔤 單字排序 (Z → A 遞減)</option>
+        </select>
+    </div>
 
-        <div id="statusText" class="status-text">連線中...</div>
-        <div id="dictionaryContainer">
-            <div class="empty-state">正在從雲端載入字庫，請稍候...</div>
-        </div>
-
-    </div><!-- end #appContent -->
+    <div id="statusText" class="status-text">連線中...</div>
+    <div id="dictionaryContainer">
+        <div class="empty-state">正在從雲端載入字庫，請稍候...</div>
+    </div>
 
     <script type="module">
         import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
         const SUPABASE_URL = 'https://rdxtwzyebyllsuqajwcp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkeHR3enllYnlsbHN1cWFqd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjE5MjcsImV4cCI6MjA5ODEzNzkyN30.iu_-J6S9vEpisMV1nhtepNilsMCacZdvmXehzIOIxdk';
-
-        // ★ SET YOUR OWN EMAIL HERE ★
-        const OWNER_EMAIL = 'alan2023uk@gmail.com';
-
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
         let dictionaryData = [];
-        let currentUserIsOwner = false;
 
         const fieldMapping = {
             'word_or_phrase':'word_or_phrase','translation':'translation','meaning':'meaning',
@@ -219,72 +140,7 @@
             'additional_notes':'additional_notes','ai_agent':'ai_agent'
         };
 
-        // ── Auth state listener ──────────────────────────────────────
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            if (session && session.user) {
-                showApp(session.user);
-            } else {
-                showLogin();
-            }
-        });
-
-        function showLogin() {
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('appContent').style.display = 'none';
-        }
-
-        function showApp(user) {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('appContent').style.display = 'block';
-            document.getElementById('userEmailDisplay').textContent = user.email;
-            currentUserIsOwner = (user.email.toLowerCase() === OWNER_EMAIL.toLowerCase());
-            applyPermissions(currentUserIsOwner);
-            loadDataFromCloud();
-        }
-
-        function applyPermissions(isOwner) {
-            document.querySelectorAll('.owner-only').forEach(el => {
-                el.style.display = isOwner ? '' : 'none';
-            });
-            // Hide checkboxes for non-owners (no point selecting without delete)
-            const style = document.getElementById('checkboxStyle') || document.createElement('style');
-            style.id = 'checkboxStyle';
-            style.textContent = isOwner ? '' : '.circle-checkbox { display: none !important; }';
-            document.head.appendChild(style);
-        }
-
-        // ── Magic link login ─────────────────────────────────────────
-        document.getElementById('sendMagicLinkBtn').addEventListener('click', async () => {
-            const email = document.getElementById('loginEmail').value.trim();
-            const msg   = document.getElementById('loginMsg');
-            const btn   = document.getElementById('sendMagicLinkBtn');
-            if (!email) { msg.textContent = '請先輸入電子郵件地址。'; return; }
-            btn.disabled = true;
-            btn.textContent = '傳送中...';
-            msg.textContent = '';
-            const { error } = await supabase.auth.signInWithOtp({
-                email,
-                options: { shouldCreateUser: false }
-            });
-            if (error) {
-                msg.style.color = '#e74c3c';
-                msg.textContent = '❌ ' + (error.message.includes('not been invited')
-                    ? '此電子郵件尚未獲得授權，請聯絡管理員。'
-                    : error.message);
-                btn.disabled = false;
-                btn.textContent = '傳送登入連結 ✉️';
-            } else {
-                msg.style.color = '#27ae60';
-                msg.textContent = '✅ 登入連結已傳送，請查看您的電子郵件！';
-            }
-        });
-
-        // ── Logout ───────────────────────────────────────────────────
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await supabase.auth.signOut();
-        });
-
-        // ── Event listeners ──────────────────────────────────────────
+        window.addEventListener('DOMContentLoaded', loadDataFromCloud);
         document.getElementById('csvFileInput').addEventListener('change', handleCsvImport);
         document.getElementById('searchInput').addEventListener('input', displayData);
         document.getElementById('sortSelect').addEventListener('change', displayData);
@@ -292,7 +148,6 @@
         document.getElementById('clearBtn').addEventListener('click', clearDictionary);
         document.getElementById('exportBtn').addEventListener('click', exportCSV);
 
-        // ── Data functions ───────────────────────────────────────────
         async function loadDataFromCloud() {
             document.getElementById('statusText').innerText = '正在讀取雲端資料...';
             try {
@@ -304,13 +159,12 @@
             } catch (err) {
                 console.error(err);
                 document.getElementById('dictionaryContainer').innerHTML =
-                    `<div class="empty-state" style="color:#e74c3c;">❌ 雲端連線失敗，請重新整理頁面。</div>`;
+                    `<div class="empty-state" style="color:#e74c3c;">❌ 雲端連線失敗，請檢查 Supabase 網址與金鑰是否填寫正確。</div>`;
                 document.getElementById('statusText').innerText = '連線失敗';
             }
         }
 
         async function handleCsvImport(e) {
-            if (!currentUserIsOwner) return;
             const files = e.target.files;
             if (!files || files.length === 0) return;
             document.getElementById('statusText').innerText = '正在處理檔案...';
@@ -348,11 +202,9 @@
         }
 
         async function deleteSelected() {
-            if (!currentUserIsOwner) return;
             const checkboxes = document.querySelectorAll('.card-selector:checked');
             if (checkboxes.length === 0) { alert('請先勾選想要刪除的單字項目圓圈！'); return; }
             const idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.getAttribute('data-id'))).filter(id => !isNaN(id));
-            if (idsToDelete.length === 0) { alert('選取的項目缺乏有效的雲端 ID，無法執行刪除。'); return; }
             if (confirm(`確定要將這 ${idsToDelete.length} 個選取的項目從雲端字庫中移除嗎？`)) {
                 document.getElementById('statusText').innerText = '正在從雲端刪除...';
                 try {
@@ -367,7 +219,6 @@
         }
 
         async function clearDictionary() {
-            if (!currentUserIsOwner) return;
             if (confirm('確定要永久清空雲端資料庫內所有的字詞紀錄嗎？')) {
                 document.getElementById('statusText').innerText = '正在清空雲端資料...';
                 try {
@@ -382,7 +233,6 @@
         }
 
         function exportCSV() {
-            if (!currentUserIsOwner) return;
             if (dictionaryData.length === 0) { alert('目前字庫為空，無法匯出。'); return; }
             const fields = ['word_or_phrase','translation','meaning','part_of_speech',
                 'pronunciation_ipa','derived_or_related','relationship_menu','cross_reference',
