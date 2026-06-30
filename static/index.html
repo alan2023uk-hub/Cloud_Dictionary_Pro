@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>詞彙庫 雲端版</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border: #e1e8ed;
+        }
+
+        /* ── Login overlay ── */
+        #loginOverlay {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        #loginBox {
+            background: #fff;
+            padding: 40px 32px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.10);
+            width: 100%; max-width: 420px;
+            text-align: center;
+        }
+        #loginBox h3 { color: var(--primary); font-size: 1.5em; margin-bottom: 8px; }
+        #loginBox p  { color: var(--text-muted); font-size: 1em; margin-bottom: 24px; }
+        #loginEmail {
+            width: 100%; padding: 12px 14px; font-size: 1em;
+            border: 1px solid var(--border); border-radius: 8px;
+            box-sizing: border-box; margin-bottom: 14px; font-family: inherit;
+        }
+        #loginEmail:focus { outline: none; border-color: var(--accent); }
+        #sendMagicLinkBtn {
+            width: 100%; padding: 13px; font-size: 1em; font-weight: bold;
+            background: var(--accent); color: #fff; border: none;
+            border-radius: 8px; cursor: pointer;
+        }
+        #sendMagicLinkBtn:hover { opacity: 0.9; }
+        #sendMagicLinkBtn:disabled { background: #95a5a6; cursor: not-allowed; }
+        #loginMsg { margin-top: 14px; font-size: 0.95em; color: var(--text-muted); min-height: 24px; }
+
+        /* ── Main app ── */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.7;
+            font-size: 22px;
+        }
+        h2 { color: var(--primary); text-align: center; margin-bottom: 10px; font-size: 1.8em; }
+        .top-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+        }
+        .top-nav a { color: var(--accent); text-decoration: none; font-weight: 600; }
+        .user-info { font-size: 0.85em; color: var(--text-muted); display: flex; align-items: center; gap: 10px; }
+        .logout-btn {
+            padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+            background: #fff; color: var(--primary); cursor: pointer; font-size: 0.85em; font-weight: 600;
+        }
+        .logout-btn:hover { background: var(--bg); }
+
+        .controls { 
+            display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; 
+            background: #fff; padding: 20px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .import-options {
+            display: flex; gap: 20px; font-size: 1em;
+            color: var(--primary); font-weight: 500;
+        }
+        .import-options label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .btn-container { display: flex; gap: 10px; flex-wrap: wrap; }
+        .upload-btn, .delete-btn, .clear-btn, .export-btn {
+            flex: 1; min-width: 140px; display: block; text-align: center;
+            padding: 12px 20px; border-radius: 8px; cursor: pointer;
+            font-weight: bold; font-size: 1em; transition: opacity 0.2s;
+            border: none; color: white; box-sizing: border-box;
+        }
+        .upload-btn { background-color: var(--accent); box-shadow: 0 4px 6px rgba(52,152,219,0.2); }
+        .delete-btn { background-color: #e67e22; box-shadow: 0 4px 6px rgba(230,126,34,0.2); }
+        .clear-btn  { background-color: #e74c3c; box-shadow: 0 4px 6px rgba(231,76,60,0.2); }
+        .export-btn { background-color: #27ae60; box-shadow: 0 4px 6px rgba(39,174,96,0.2); }
+        .upload-btn:hover, .delete-btn:hover, .clear-btn:hover, .export-btn:hover { opacity: 0.9; }
+        #csvFileInput { display: none; }
+
+        #searchInput, #sortSelect {
+            width: 100%; padding: 12px 15px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 20px; box-sizing: border-box;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); background-color: white;
+        }
+        #searchInput:focus, #sortSelect:focus { outline: none; border-color: var(--accent); }
+        #sortSelect { cursor: pointer; }
+
+        .card {
+            background-color: var(--card-bg); padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;
+        }
+        .card-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+        .card-title-group { display: flex; align-items: center; gap: 12px; }
+        .word-title { font-size: 2em; font-weight: bold; color: var(--primary); margin: 0; }
+        .circle-checkbox {
+            appearance: none; -webkit-appearance: none;
+            width: 26px; height: 26px; border: 2px solid #bdc3c7; border-radius: 50%;
+            outline: none; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; transition: background-color 0.2s, border-color 0.2s;
+            margin: 0; flex-shrink: 0;
+        }
+        .circle-checkbox:checked { background-color: #e67e22; border-color: #e67e22; }
+        .circle-checkbox:checked::after { content: '✓'; color: white; font-size: 16px; font-weight: bold; }
+        .circle-checkbox:hover { border-color: #e67e22; }
+        .ipa { font-family: "Courier New", Courier, monospace; color: var(--text-muted); font-size: 1em; }
+        .translation { font-size: 1.3em; font-weight: 500; color: #27ae60; margin-bottom: 15px; padding-left: 34px; }
+        .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; padding-left: 34px; }
+        .tag { padding: 5px 12px; border-radius: 20px; font-size: 1em; font-weight: bold; background-color: #e8f4fd; color: var(--accent); }
+        .tag.pos    { background-color: #fdf2e9; color: #d35400; }
+        .tag.source { background-color: #f4f6f7; color: #7f8c8d; border: 1px solid #bdc3c7; }
+        .tag.ai     { background-color: #f9e79f; color: #b7950b; }
+        .section { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 12px; margin-left: 34px; }
+        .section-title { font-size: 1em; color: #95a5a6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: bold; }
+        .content-text { white-space: pre-wrap; font-size: 1.1em; color: #444; }
+        .audio-link {
+            display: inline-block; margin-top: 10px; padding: 8px 12px;
+            background-color: #f1f2f6; color: var(--primary); text-decoration: none;
+            border-radius: 6px; font-size: 1em; font-weight: 500;
+        }
+        .audio-link:hover { background-color: #dfe4ea; }
+        .empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
+        .status-text { text-align: right; font-size: 1em; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px; }
+        .owner-only { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Login overlay (shown until authenticated) -->
+    <div id="loginOverlay">
+        <div id="loginBox">
+            <h3>📚 詞彙庫 雲端版</h3>
+            <p>請輸入您的電子郵件<br>以接收一次性登入連結</p>
+            <input type="email" id="loginEmail" placeholder="your@email.com">
+            <button id="sendMagicLinkBtn">傳送登入連結 ✉️</button>
+            <div id="loginMsg"></div>
+        </div>
+    </div>
+
+    <!-- Main app (hidden until authenticated) -->
+    <div id="appContent" style="display:none;">
+
+        <h2>📚 詞彙庫 雲端版</h2>
+
+        <div class="top-nav">
+            <a href="/add">➕ 新增詞語</a>
+            <div class="user-info">
+                <span id="userEmailDisplay"></span>
+                <button class="logout-btn" id="logoutBtn">登出</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <!-- Owner-only controls -->
+            <div class="import-options owner-only">
+                <label><input type="radio" name="importMode" value="append" checked> ➕ 附加到現有資料</label>
+                <label><input type="radio" name="importMode" value="replace"> 🔄 替換現有資料</label>
+            </div>
+            <div class="btn-container">
+                <label for="csvFileInput" class="upload-btn owner-only">📁 匯入 CSV 檔案</label>
+                <button class="export-btn owner-only" id="exportBtn">💾 備份下載 CSV</button>
+                <button class="delete-btn owner-only" id="deleteBtn">❌ 刪除選取項目</button>
+                <button class="clear-btn owner-only" id="clearBtn">🗑️ 清除所有資料</button>
+            </div>
+            <input type="file" id="csvFileInput" accept=".csv" multiple>
+            <input type="text" id="searchInput" placeholder="🔍 搜尋單字、翻譯或例句內容...">
+            <select id="sortSelect">
+                <option value="newest">🕘 新增時間 (最新優先)</option>
+                <option value="oldest">🕘 新增時間 (最舊優先)</option>
+                <option value="asc">🔤 單字排序 (A → Z 遞增)</option>
+                <option value="desc">🔤 單字排序 (Z → A 遞減)</option>
+            </select>
+        </div>
+
+        <div id="statusText" class="status-text">連線中...</div>
+        <div id="dictionaryContainer">
+            <div class="empty-state">正在從雲端載入字庫，請稍候...</div>
+        </div>
+
+    </div><!-- end #appContent -->
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+        const SUPABASE_URL = 'https://rdxtwzyebyllsuqajwcp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkeHR3enllYnlsbHN1cWFqd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjE5MjcsImV4cCI6MjA5ODEzNzkyN30.iu_-J6S9vEpisMV1nhtepNilsMCacZdvmXehzIOIxdk';
+
+        // ★ SET YOUR OWN EMAIL HERE ★
+        const OWNER_EMAIL = 'alan2023uk@gmail.com';
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        let dictionaryData = [];
+        let currentUserIsOwner = false;
+
+        const fieldMapping = {
+            'word_or_phrase':'word_or_phrase','translation':'translation','meaning':'meaning',
+            'part_of_speech':'part_of_speech','pronunciation_ipa':'pronunciation_ipa',
+            'derived_or_related':'derived_or_related','relationship_menu':'relationship_menu',
+            'cross_reference':'cross_reference','entry_type':'entry_type',
+            'pronunciation_link':'pronunciation_link','register_and_variety':'register_and_variety',
+            'collocations_and_expressions':'collocations_and_expressions','source':'source',
+            'additional_notes':'additional_notes','ai_agent':'ai_agent'
+        };
+
+        // ── Auth state listener ──────────────────────────────────────
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session && session.user) {
+                showApp(session.user);
+            } else {
+                showLogin();
+            }
+        });
+
+        function showLogin() {
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('appContent').style.display = 'none';
+        }
+
+        function showApp(user) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+            document.getElementById('userEmailDisplay').textContent = user.email;
+            currentUserIsOwner = (user.email.toLowerCase() === OWNER_EMAIL.toLowerCase());
+            applyPermissions(currentUserIsOwner);
+            loadDataFromCloud();
+        }
+
+        function applyPermissions(isOwner) {
+            document.querySelectorAll('.owner-only').forEach(el => {
+                el.style.display = isOwner ? '' : 'none';
+            });
+            // Hide checkboxes for non-owners (no point selecting without delete)
+            const style = document.getElementById('checkboxStyle') || document.createElement('style');
+            style.id = 'checkboxStyle';
+            style.textContent = isOwner ? '' : '.circle-checkbox { display: none !important; }';
+            document.head.appendChild(style);
+        }
+
+        // ── Magic link login ─────────────────────────────────────────
+        document.getElementById('sendMagicLinkBtn').addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value.trim();
+            const msg   = document.getElementById('loginMsg');
+            const btn   = document.getElementById('sendMagicLinkBtn');
+            if (!email) { msg.textContent = '請先輸入電子郵件地址。'; return; }
+            btn.disabled = true;
+            btn.textContent = '傳送中...';
+            msg.textContent = '';
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: { shouldCreateUser: false }
+            });
+            if (error) {
+                msg.style.color = '#e74c3c';
+                msg.textContent = '❌ ' + (error.message.includes('not been invited')
+                    ? '此電子郵件尚未獲得授權，請聯絡管理員。'
+                    : error.message);
+                btn.disabled = false;
+                btn.textContent = '傳送登入連結 ✉️';
+            } else {
+                msg.style.color = '#27ae60';
+                msg.textContent = '✅ 登入連結已傳送，請查看您的電子郵件！';
+            }
+        });
+
+        // ── Logout ───────────────────────────────────────────────────
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabase.auth.signOut();
+        });
+
+        // ── Event listeners ──────────────────────────────────────────
+        document.getElementById('csvFileInput').addEventListener('change', handleCsvImport);
+        document.getElementById('searchInput').addEventListener('input', displayData);
+        document.getElementById('sortSelect').addEventListener('change', displayData);
+        document.getElementById('deleteBtn').addEventListener('click', deleteSelected);
+        document.getElementById('clearBtn').addEventListener('click', clearDictionary);
+        document.getElementById('exportBtn').addEventListener('click', exportCSV);
+
+        // ── Data functions ───────────────────────────────────────────
+        async function loadDataFromCloud() {
+            document.getElementById('statusText').innerText = '正在讀取雲端資料...';
+            try {
+                let { data, error } = await supabase.from('dictionary').select('*').order('id', { ascending: true });
+                if (error) throw error;
+                dictionaryData = data || [];
+                updateStatus();
+                displayData();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('dictionaryContainer').innerHTML =
+                    `<div class="empty-state" style="color:#e74c3c;">❌ 雲端連線失敗，請重新整理頁面。</div>`;
+                document.getElementById('statusText').innerText = '連線失敗';
+            }
+        }
+
+        async function handleCsvImport(e) {
+            if (!currentUserIsOwner) return;
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+            document.getElementById('statusText').innerText = '正在處理檔案...';
+            let allNewData = [];
+            for (let i = 0; i < files.length; i++) {
+                const text = await new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = event => resolve(event.target.result);
+                    reader.readAsText(files[i], 'UTF-8');
+                });
+                allNewData = allNewData.concat(parseCSV(text));
+            }
+            if (allNewData.length === 0) { alert('未解析到有效數據，請檢查 CSV 格式。'); e.target.value = ''; return; }
+            const importMode = document.querySelector('input[name="importMode"]:checked').value;
+            document.getElementById('statusText').innerText = '正在處理同步...';
+            try {
+                if (importMode === 'replace') {
+                    const { error: delError } = await supabase.from('dictionary').delete().gt('id', 0);
+                    if (delError) throw delError;
+                }
+                const chunkSize = 20;
+                for (let i = 0; i < allNewData.length; i += chunkSize) {
+                    const chunk = allNewData.slice(i, i + chunkSize);
+                    const { error: insError } = await supabase.from('dictionary').insert(chunk);
+                    if (insError) throw insError;
+                }
+                alert('資料成功同步至雲端！');
+                await loadDataFromCloud();
+            } catch (err) {
+                alert('資料同步至雲端時發生錯誤：' + err.message);
+                loadDataFromCloud();
+            }
+            document.getElementById('searchInput').value = '';
+            e.target.value = '';
+        }
+
+        async function deleteSelected() {
+            if (!currentUserIsOwner) return;
+            const checkboxes = document.querySelectorAll('.card-selector:checked');
+            if (checkboxes.length === 0) { alert('請先勾選想要刪除的單字項目圓圈！'); return; }
+            const idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.getAttribute('data-id'))).filter(id => !isNaN(id));
+            if (idsToDelete.length === 0) { alert('選取的項目缺乏有效的雲端 ID，無法執行刪除。'); return; }
+            if (confirm(`確定要將這 ${idsToDelete.length} 個選取的項目從雲端字庫中移除嗎？`)) {
+                document.getElementById('statusText').innerText = '正在從雲端刪除...';
+                try {
+                    const { error } = await supabase.from('dictionary').delete().in('id', idsToDelete);
+                    if (error) throw error;
+                    await loadDataFromCloud();
+                } catch (err) {
+                    alert('從雲端刪除失敗：' + err.message);
+                    loadDataFromCloud();
+                }
+            }
+        }
+
+        async function clearDictionary() {
+            if (!currentUserIsOwner) return;
+            if (confirm('確定要永久清空雲端資料庫內所有的字詞紀錄嗎？')) {
+                document.getElementById('statusText').innerText = '正在清空雲端資料...';
+                try {
+                    const { error } = await supabase.from('dictionary').delete().gt('id', 0);
+                    if (error) throw error;
+                    await loadDataFromCloud();
+                } catch (err) {
+                    alert('清空雲端失敗：' + err.message);
+                    loadDataFromCloud();
+                }
+            }
+        }
+
+        function exportCSV() {
+            if (!currentUserIsOwner) return;
+            if (dictionaryData.length === 0) { alert('目前字庫為空，無法匯出。'); return; }
+            const fields = ['word_or_phrase','translation','meaning','part_of_speech',
+                'pronunciation_ipa','derived_or_related','relationship_menu','cross_reference',
+                'entry_type','pronunciation_link','register_and_variety','collocations_and_expressions',
+                'source','additional_notes','ai_agent'];
+            const escape = val => {
+                const s = (val ?? '').toString();
+                return s.includes(',') || s.includes('"') || s.includes('\n')
+                    ? '"' + s.replace(/"/g, '""') + '"' : s;
+            };
+            const rows = [fields.join(',')];
+            dictionaryData.forEach(item => rows.push(fields.map(f => escape(item[f])).join(',')));
+            const blob = new Blob(['\uFEFF' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dictionary_backup_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function updateStatus() {
+            document.getElementById('statusText').innerText = `目前收錄：${dictionaryData.length} 個詞彙 (已與雲端同步)`;
+        }
+
+        function displayData() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const sortValue = document.getElementById('sortSelect').value;
+            let processedData = [...dictionaryData];
+            if (query) {
+                processedData = processedData.filter(item =>
+                    (item['word_or_phrase']||'').toLowerCase().includes(query) ||
+                    (item['translation']||'').toLowerCase().includes(query) ||
+                    (item['meaning']||'').toLowerCase().includes(query)
+                );
+            }
+            if (sortValue === 'oldest') processedData.sort((a,b) => (a.id||0)-(b.id||0));
+            else if (sortValue === 'newest') processedData.sort((a,b) => (b.id||0)-(a.id||0));
+            else if (sortValue === 'asc') processedData.sort((a,b) => (a['word_or_phrase']||'').localeCompare(b['word_or_phrase']||'','en'));
+            else if (sortValue === 'desc') processedData.sort((a,b) => (b['word_or_phrase']||'').localeCompare(a['word_or_phrase']||'','en'));
+            renderCards(processedData);
+        }
+
+        function parseCSV(text) {
+            text = text.replace(/^\uFEFF/, '');
+            const result = []; let row = [], currentStr = '', insideQuote = false;
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i], nextChar = text[i+1];
+                if (char === '"') {
+                    if (insideQuote && nextChar === '"') { currentStr += '"'; i++; }
+                    else { insideQuote = !insideQuote; }
+                } else if (char === ',' && !insideQuote) { row.push(currentStr); currentStr = ''; }
+                else if ((char === '\n' || (char === '\r' && nextChar === '\n')) && !insideQuote) {
+                    if (char === '\r') i++;
+                    row.push(currentStr);
+                    if (row.join('').trim()) result.push(row);
+                    row = []; currentStr = '';
+                } else { currentStr += char; }
+            }
+            if (currentStr || row.length > 0) { row.push(currentStr); result.push(row); }
+            if (result.length < 2) return [];
+            const headers = result[0].map(h => h.trim());
+            const data = [];
+            for (let i = 1; i < result.length; i++) {
+                const obj = {}; let hasData = false;
+                for (let j = 0; j < headers.length; j++) {
+                    const csvHeader = headers[j];
+                    if (csvHeader && fieldMapping[csvHeader]) {
+                        const val = result[i][j] ? result[i][j].trim() : '';
+                        obj[fieldMapping[csvHeader]] = val;
+                        if (val) hasData = true;
+                    }
+                }
+                if (hasData && obj['word_or_phrase']) data.push(obj);
+            }
+            return data;
+        }
+
+        function renderCards(data) {
+            const container = document.getElementById('dictionaryContainer');
+            container.innerHTML = '';
+            if (data.length === 0) {
+                container.innerHTML = '<div class="empty-state">找不到相符的詞彙或資料庫目前為空。</div>';
+                return;
+            }
+            data.forEach(item => {
+                if (!item['word_or_phrase'] || !item.id) return;
+                const card = document.createElement('div');
+                card.className = 'card';
+                let html = `
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <input type="checkbox" class="circle-checkbox card-selector" data-id="${item.id}">
+                            <h3 class="word-title">${item['word_or_phrase']}</h3>
+                        </div>
+                        ${item['pronunciation_ipa'] ? `<span class="ipa">${item['pronunciation_ipa']}</span>` : ''}
+                    </div>
+                    ${item['translation'] ? `<div class="translation">${item['translation']}</div>` : ''}
+                    <div class="tags">
+                        ${item['part_of_speech'] ? `<span class="tag pos">${item['part_of_speech']}</span>` : ''}
+                        ${item['entry_type'] ? `<span class="tag">${item['entry_type']}</span>` : ''}
+                        ${item['register_and_variety'] ? `<span class="tag">${item['register_and_variety']}</span>` : ''}
+                        ${item['source'] ? `<span class="tag source">📖 ${item['source']}</span>` : ''}
+                        ${item['ai_agent'] ? `<span class="tag ai">🤖 由 ${item['ai_agent']} 生成</span>` : ''}
+                    </div>`;
+                [
+                    { title: '意思與例句 (Meaning)', key: 'meaning' },
+                    { title: '搭配詞與慣用語 (Collocations)', key: 'collocations_and_expressions' },
+                    { title: '衍生與相關詞彙 (Derived/Related)', key: 'derived_or_related' },
+                    { title: '補充筆記 (Additional Notes)', key: 'additional_notes' }
+                ].forEach(s => {
+                    if (item[s.key]) html += `
+                        <div class="section">
+                            <div class="section-title">${s.title}</div>
+                            <div class="content-text">${item[s.key]}</div>
+                        </div>`;
+                });
+                if (item['pronunciation_link'] && item['pronunciation_link'].trim()) {
+                    html += `
+                        <div class="section" style="border:none;">
+                            <a href="${item['pronunciation_link'].trim()}" target="_blank"
+                               rel="noopener noreferrer" class="audio-link"
+                               onclick="window.open('${item['pronunciation_link'].trim()}','_blank');return false;">
+                               🔊 點此聆聽發音
+                            </a>
+                        </div>`;
+                }
+                card.innerHTML = html;
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
