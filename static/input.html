@@ -10,53 +10,14 @@
         --card-bg: #ffffff; --text-main: #333333; --text-muted: #666666;
         --border: #e1e8ed; --ok: #27ae60; --warn: #e67e22; --err: #e74c3c;
     }
-
-    /* ── Login overlay ── */
-    #loginOverlay {
-        position: fixed; inset: 0; background: var(--bg);
-        display: flex; align-items: center; justify-content: center; z-index: 9999;
-    }
-    #loginBox {
-        background: #fff; padding: 40px 32px; border-radius: 16px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.10);
-        width: 100%; max-width: 420px; text-align: center;
-    }
-    #loginBox h3 { color: var(--primary); font-size: 1.5em; margin-bottom: 8px; }
-    #loginBox p  { color: var(--text-muted); font-size: 1em; margin-bottom: 24px; }
-    #loginEmail {
-        width: 100%; padding: 12px 14px; font-size: 1em;
-        border: 1px solid var(--border); border-radius: 8px;
-        box-sizing: border-box; margin-bottom: 14px; font-family: inherit;
-    }
-    #loginEmail:focus { outline: none; border-color: var(--accent); }
-    #sendMagicLinkBtn {
-        width: 100%; padding: 13px; font-size: 1em; font-weight: bold;
-        background: var(--accent); color: #fff; border: none;
-        border-radius: 8px; cursor: pointer;
-    }
-    #sendMagicLinkBtn:hover { opacity: 0.9; }
-    #sendMagicLinkBtn:disabled { background: #95a5a6; cursor: not-allowed; }
-    #loginMsg { margin-top: 14px; font-size: 0.95em; color: var(--text-muted); min-height: 24px; }
-
-    /* ── Main app ── */
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         background-color: var(--bg); color: var(--text-main);
         max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; font-size: 22px;
     }
     h2 { color: var(--primary); text-align: center; margin-bottom: 6px; }
-    .top-nav {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 25px; flex-wrap: wrap; gap: 10px;
-    }
-    .top-nav a { color: var(--accent); text-decoration: none; font-weight: 600; }
-    .user-info { font-size: 0.85em; color: var(--text-muted); display: flex; align-items: center; gap: 10px; }
-    .logout-btn {
-        padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
-        background: #fff; color: var(--primary); cursor: pointer; font-size: 0.85em; font-weight: 600;
-    }
-    .logout-btn:hover { background: var(--bg); }
-
+    .nav { text-align: center; margin-bottom: 25px; }
+    .nav a { color: var(--accent); text-decoration: none; font-weight: 600; }
     .panel {
         background: #fff; padding: 20px; border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 20px;
@@ -80,7 +41,6 @@
     }
     .primary-btn:hover { opacity: 0.92; }
     .primary-btn:disabled { background-color:#95a5a6; box-shadow:none; cursor:not-allowed; }
-
     .card {
         background-color:var(--card-bg); padding:18px 20px; border-radius:12px;
         box-shadow:0 4px 12px rgba(0,0,0,0.05); margin-bottom:16px; border-left:5px solid var(--border);
@@ -116,28 +76,8 @@
 </head>
 <body>
 
-<!-- Login overlay -->
-<div id="loginOverlay">
-    <div id="loginBox">
-        <h3>📚 詞彙庫 雲端版</h3>
-        <p>請輸入您的電子郵件<br>以接收一次性登入連結</p>
-        <input type="email" id="loginEmail" placeholder="your@email.com">
-        <button id="sendMagicLinkBtn">傳送登入連結 ✉️</button>
-        <div id="loginMsg"></div>
-    </div>
-</div>
-
-<!-- Main app -->
-<div id="appContent" style="display:none;">
-
 <h2>➕ 新增詞語</h2>
-<div class="top-nav">
-    <a href="/">📚 查看詞庫 →</a>
-    <div class="user-info">
-        <span id="userEmailDisplay"></span>
-        <button class="logout-btn" id="logoutBtn">登出</button>
-    </div>
-</div>
+<div class="nav"><a href="/">📚 查看詞庫 →</a></div>
 
 <div class="panel">
     <textarea id="wordsInput" placeholder="輸入單字或片語，一行一個，例如：&#10;dregs&#10;albeit&#10;細路"></textarea>
@@ -146,10 +86,8 @@
             <label class="field-label">查詢模型</label>
             <select id="modelSelect">
                 <option value="gemini">Gemini（免費，每日限額）</option>
-                <option value="groq">Groq（免費，每日限額）</option>
                 <option value="deepseek">DeepSeek（付費，費用極低）</option>
             </select>
-            <div id="modelInfo" style="font-size:0.75em; color:var(--text-muted); margin-top:6px;"></div>
         </div>
     </div>
     <div class="checkrow">
@@ -160,8 +98,6 @@
 </div>
 
 <div id="resultsContainer"></div>
-
-</div><!-- end #appContent -->
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -187,46 +123,8 @@ const LABELS = {
     additional_notes:"補充筆記", ai_agent:"AI 模型"
 };
 
-// ── Auth ─────────────────────────────────────────────────
-supabase.auth.onAuthStateChange((event, session) => {
-    if (session && session.user) {
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('appContent').style.display = 'block';
-        document.getElementById('userEmailDisplay').textContent = session.user.email;
-    } else {
-        document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('appContent').style.display = 'none';
-    }
-});
-
-document.getElementById('sendMagicLinkBtn').addEventListener('click', async () => {
-    const email = document.getElementById('loginEmail').value.trim();
-    const msg   = document.getElementById('loginMsg');
-    const btn   = document.getElementById('sendMagicLinkBtn');
-    if (!email) { msg.textContent = '請先輸入電子郵件地址。'; return; }
-    btn.disabled = true; btn.textContent = '傳送中...'; msg.textContent = '';
-    const { error } = await supabase.auth.signInWithOtp({
-        email, options: { shouldCreateUser: false }
-    });
-    if (error) {
-        msg.style.color = '#e74c3c';
-        msg.textContent = '❌ ' + (error.message.includes('not been invited')
-            ? '此電子郵件尚未獲得授權，請聯絡管理員。' : error.message);
-        btn.disabled = false; btn.textContent = '傳送登入連結 ✉️';
-    } else {
-        msg.style.color = '#27ae60';
-        msg.textContent = '✅ 登入連結已傳送，請查看您的電子郵件！';
-    }
-});
-
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await supabase.auth.signOut();
-});
-
-// ── Lookup queue ─────────────────────────────────────────
-const startBtn         = document.getElementById('startBtn');
+const startBtn = document.getElementById('startBtn');
 const resultsContainer = document.getElementById('resultsContainer');
-
 startBtn.addEventListener('click', runQueue);
 
 function cleanWord(raw) { return raw.trim().replace(/^\d+\.\s*/, ''); }
