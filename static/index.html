@@ -144,38 +144,30 @@
 
         // ── Owner password ───────────────────────────────────────────
         // Change this to your own password
-        const OWNER_PASSWORD = 'Cloud#dict';
+        const OWNER_PASSWORD = 'Clouddictionary';
         let isOwner = false;
 
         function promptOwnerLogin() {
             if (isOwner) {
-                // Already owner — clicking lock again logs out
                 isOwner = false;
                 document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'none');
-                document.querySelectorAll('.circle-checkbox').forEach(el => el.style.display = 'none');
                 document.getElementById('ownerLockBtn').textContent = '🔒';
                 document.getElementById('ownerLockBtn').title = '擁有者登入';
+                displayData(); // re-render cards without checkboxes
                 return;
             }
             const pwd = prompt('請輸入擁有者密碼：');
-            if (pwd === null) return; // cancelled
+            if (pwd === null) return;
             if (pwd === OWNER_PASSWORD) {
                 isOwner = true;
                 document.querySelectorAll('.owner-only').forEach(el => el.style.display = '');
-                document.querySelectorAll('.circle-checkbox').forEach(el => el.style.display = '');
                 document.getElementById('ownerLockBtn').textContent = '🔓';
                 document.getElementById('ownerLockBtn').title = '擁有者已登入（點此登出）';
+                displayData(); // re-render cards with checkboxes
             } else {
                 alert('密碼錯誤。');
             }
         }
-
-        // Hide checkboxes by default (only useful for owner delete)
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.circle-checkbox').forEach(el => el.style.display = 'none');
-        });
-
-        window.promptOwnerLogin = promptOwnerLogin;
 
         window.addEventListener('DOMContentLoaded', loadDataFromCloud);
         document.getElementById('csvFileInput').addEventListener('change', handleCsvImport);
@@ -362,7 +354,7 @@
                 let html = `
                     <div class="card-header">
                         <div class="card-title-group">
-                            <input type="checkbox" class="circle-checkbox card-selector" data-id="${item.id}" style="display:${isOwner ? '' : 'none'}">
+                            <input type="checkbox" class="circle-checkbox card-selector" data-id="${item.id}" style="display:${isOwner ? 'flex' : 'none'}">
                             <h3 class="word-title">${item['word_or_phrase']}</h3>
                         </div>
                         ${item['pronunciation_ipa'] ? `<span class="ipa">${item['pronunciation_ipa']}</span>` : ''}
