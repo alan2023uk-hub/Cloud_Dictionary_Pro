@@ -144,16 +144,16 @@
 
         // ── Owner password ───────────────────────────────────────────
         // Change this to your own password
-        const OWNER_PASSWORD = 'Clouddictionary';
+        const OWNER_PASSWORD = 'CloudDictionary';
         let isOwner = false;
 
-        function promptOwnerLogin() {
+        window.promptOwnerLogin = function() {
             if (isOwner) {
                 isOwner = false;
                 document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'none');
                 document.getElementById('ownerLockBtn').textContent = '🔒';
                 document.getElementById('ownerLockBtn').title = '擁有者登入';
-                displayData(); // re-render cards without checkboxes
+                displayData();
                 return;
             }
             const pwd = prompt('請輸入擁有者密碼：');
@@ -163,7 +163,7 @@
                 document.querySelectorAll('.owner-only').forEach(el => el.style.display = '');
                 document.getElementById('ownerLockBtn').textContent = '🔓';
                 document.getElementById('ownerLockBtn').title = '擁有者已登入（點此登出）';
-                displayData(); // re-render cards with checkboxes
+                displayData();
             } else {
                 alert('密碼錯誤。');
             }
