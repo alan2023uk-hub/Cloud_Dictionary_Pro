@@ -100,16 +100,17 @@
     </div>
 
     <div class="controls">
-        <div class="import-options owner-only">
+        <div class="import-options owner-only" style="display:none;">
             <label><input type="radio" name="importMode" value="append" checked> ➕ 附加到現有資料</label>
             <label><input type="radio" name="importMode" value="replace"> 🔄 替換現有資料</label>
         </div>
         <div class="btn-container">
-            <label for="csvFileInput" class="upload-btn owner-only">📁 匯入 CSV 檔案</label>
-            <button class="export-btn owner-only" id="exportBtn">💾 備份下載 CSV</button>
-            <button class="delete-btn owner-only" id="deleteBtn">❌ 刪除選取項目</button>
-            <button class="clear-btn owner-only" id="clearBtn">🗑️ 清除所有資料</button>
+            <label for="csvFileInput" class="upload-btn owner-only" style="display:none;">📁 匯入 CSV 檔案</label>
+            <button class="export-btn owner-only" id="exportBtn" style="display:none;">💾 備份下載 CSV</button>
+            <button class="delete-btn owner-only" id="deleteBtn" style="display:none;">❌ 刪除選取項目</button>
+            <button class="clear-btn owner-only" id="clearBtn" style="display:none;">🗑️ 清除所有資料</button>
         </div>
+        <input type="file" id="csvFileInput" accept=".csv" multiple style="display:none;">
         <input type="text" id="searchInput" placeholder="🔍 搜尋單字、翻譯或例句內容...">
         <select id="sortSelect">
             <option value="newest">🕘 新增時間 (最新優先)</option>
@@ -143,7 +144,7 @@
 
         // ── Owner password ───────────────────────────────────────────
         // Change this to your own password
-        const OWNER_PASSWORD = 'Cloud';
+        const OWNER_PASSWORD = 'YOUR_PASSWORD_HERE';
         let isOwner = false;
 
         window.promptOwnerLogin = function() {
@@ -160,7 +161,11 @@
             if (pwd === OWNER_PASSWORD) {
                 isOwner = true;
                 document.querySelectorAll('.owner-only').forEach(el => {
-                    el.style.display = 'block';
+                    if (el.classList.contains('import-options')) {
+                        el.style.display = 'flex';
+                    } else {
+                        el.style.display = 'inline-block';
+                    }
                 });
                 document.getElementById('ownerLockBtn').textContent = '🔓';
                 document.getElementById('ownerLockBtn').title = '擁有者已登入（點此登出）';
