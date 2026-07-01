@@ -96,7 +96,7 @@
     <h2>📚 詞彙庫 雲端版</h2>
     <div style="text-align:center; margin-bottom:20px; display:flex; justify-content:center; align-items:center; gap:15px;">
         <a href="/add" style="color:#3498db; text-decoration:none; font-weight:600;">➕ 新增詞語</a>
-        <span id="ownerLockBtn" title="登入" style="cursor:pointer; font-size:1em; color:#bdc3c7; user-select:none;" onclick="promptOwnerLogin()">🔒</span>
+        <span id="ownerLockBtn" title="登入 / Login" style="cursor:pointer; font-size:1em; color:#bdc3c7; user-select:none;" onclick="promptOwnerLogin()">🔒</span>
     </div>
 
     <div class="controls">
@@ -154,20 +154,20 @@
                 isLoggedIn = false;
                 document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'none');
                 document.getElementById('ownerLockBtn').textContent = '🔒';
-                document.getElementById('ownerLockBtn').title = '登入';
+                document.getElementById('ownerLockBtn').title = '登入 / Login';
                 document.getElementById('dictionaryContainer').innerHTML =
-                    '<div class="empty-state">請登入以查看詞庫內容。<br><a href="/register" style="color:#3498db;">還沒有帳號？點此註冊 →</a></div>';
+                    '<div class="empty-state">請登入以查看詞庫內容 / Please log in to view the dictionary<br><a href="/register" style="color:#3498db;">還沒有帳號？點此註冊 / No account? Register here →</a></div>';
                 document.getElementById('statusText').innerText = '';
                 return;
             }
-            const email = prompt('請輸入電子郵件：');
+            const email = prompt('請輸入電子郵件 / Enter your email:');
             if (email === null) return;
-            const password = prompt('請輸入密碼：');
+            const password = prompt('請輸入密碼 / Enter your password:');
             if (password === null) return;
 
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) {
-                alert('登入失敗：' + error.message);
+                alert('登入失敗 / Login failed：' + error.message);
                 return;
             }
 
@@ -179,10 +179,10 @@
                     el.style.display = el.classList.contains('import-options') ? 'flex' : 'inline-block';
                 });
                 document.getElementById('ownerLockBtn').textContent = '🔓';
-                document.getElementById('ownerLockBtn').title = '擁有者已登入（點此登出）';
+                document.getElementById('ownerLockBtn').title = '擁有者已登入（點此登出） / Owner logged in (click to log out)';
             } else {
                 document.getElementById('ownerLockBtn').textContent = '👤';
-                document.getElementById('ownerLockBtn').title = '已登入（點此登出）';
+                document.getElementById('ownerLockBtn').title = '已登入（點此登出） / Logged in (click to log out)';
             }
             loadDataFromCloud();
         }
@@ -197,15 +197,15 @@
                         el.style.display = el.classList.contains('import-options') ? 'flex' : 'inline-block';
                     });
                     document.getElementById('ownerLockBtn').textContent = '🔓';
-                    document.getElementById('ownerLockBtn').title = '擁有者已登入（點此登出）';
+                    document.getElementById('ownerLockBtn').title = '擁有者已登入（點此登出） / Owner logged in (click to log out)';
                 } else {
                     document.getElementById('ownerLockBtn').textContent = '👤';
-                    document.getElementById('ownerLockBtn').title = '已登入（點此登出）';
+                    document.getElementById('ownerLockBtn').title = '已登入（點此登出） / Logged in (click to log out)';
                 }
                 loadDataFromCloud();
             } else {
                 document.getElementById('dictionaryContainer').innerHTML =
-                    '<div class="empty-state">請登入以查看詞庫內容。<br><a href="/register" style="color:#3498db;">還沒有帳號？點此註冊 →</a></div>';
+                    '<div class="empty-state">請登入以查看詞庫內容 / Please log in to view the dictionary<br><a href="/register" style="color:#3498db;">還沒有帳號？點此註冊 / No account? Register here →</a></div>';
                 document.getElementById('statusText').innerText = '';
             }
         });
