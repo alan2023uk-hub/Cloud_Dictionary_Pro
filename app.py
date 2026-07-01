@@ -157,7 +157,7 @@ def call_groq(word: str) -> dict:
             {"role": "user", "content": f"請查詢這個單字：{word}"},
         ],
         "temperature": 0.3,
-        "max_tokens": 3000,
+        "max_tokens": 1500,
     }).encode("utf-8")
 
     req = urllib.request.Request(
