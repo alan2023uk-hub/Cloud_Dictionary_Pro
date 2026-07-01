@@ -559,6 +559,10 @@
                             });
                             // Toggle current card
                             card.classList.toggle('expanded');
+                            // Scroll to top of card if expanded
+                            if (card.classList.contains('expanded')) {
+                                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
                         }
                     });
                 }
