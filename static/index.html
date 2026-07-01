@@ -551,6 +551,13 @@
                 if (wordTitle) {
                     wordTitle.addEventListener('click', () => {
                         if (document.body.classList.contains('collapsed-view')) {
+                            // Collapse all other expanded cards
+                            document.querySelectorAll('.card.expanded').forEach(otherCard => {
+                                if (otherCard !== card) {
+                                    otherCard.classList.remove('expanded');
+                                }
+                            });
+                            // Toggle current card
                             card.classList.toggle('expanded');
                         }
                     });
