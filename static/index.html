@@ -96,7 +96,7 @@
     <h2>📚 詞彙庫 雲端版</h2>
     <div style="text-align:center; margin-bottom:20px; display:flex; justify-content:center; align-items:center; gap:15px;">
         <a href="/add" style="color:#3498db; text-decoration:none; font-weight:600;">➕ 新增詞語</a>
-        <span id="ownerLockBtn" title="擁有者登入" style="cursor:pointer; font-size:1em; color:#bdc3c7; user-select:none;" onclick="promptOwnerLogin()">🔒</span>
+        <span id="ownerLockBtn" title="登入" style="cursor:pointer; font-size:1em; color:#bdc3c7; user-select:none;" onclick="promptOwnerLogin()">🔒</span>
     </div>
 
     <div class="controls">
@@ -142,40 +142,73 @@
             'additional_notes':'additional_notes','ai_agent':'ai_agent'
         };
 
-        // ── Owner password ───────────────────────────────────────────
-        // Change this to your own password
-        const OWNER_PASSWORD = 'Cloud';
+        // ── Login (Supabase Auth, email + password) ───────────────────
+        const OWNER_EMAIL = 'alan2023uk@gmail.com';
         let isOwner = false;
+        let isLoggedIn = false;
 
-        window.promptOwnerLogin = function() {
-            if (isOwner) {
+        window.promptOwnerLogin = async function() {
+            if (isLoggedIn) {
+                await supabase.auth.signOut();
                 isOwner = false;
+                isLoggedIn = false;
                 document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'none');
                 document.getElementById('ownerLockBtn').textContent = '🔒';
-                document.getElementById('ownerLockBtn').title = '擁有者登入';
-                displayData();
+                document.getElementById('ownerLockBtn').title = '登入';
+                document.getElementById('dictionaryContainer').innerHTML =
+                    '<div class="empty-state">請登入以查看詞庫內容。<br><a href="/register" style="color:#3498db;">還沒有帳號？點此註冊 →</a></div>';
+                document.getElementById('statusText').innerText = '';
                 return;
             }
-            const pwd = prompt('請輸入擁有者密碼：');
-            if (pwd === null) return;
-            if (pwd === OWNER_PASSWORD) {
-                isOwner = true;
+            const email = prompt('請輸入電子郵件：');
+            if (email === null) return;
+            const password = prompt('請輸入密碼：');
+            if (password === null) return;
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                alert('登入失敗：' + error.message);
+                return;
+            }
+
+            isLoggedIn = true;
+            isOwner = (data.user.email.toLowerCase() === OWNER_EMAIL.toLowerCase());
+
+            if (isOwner) {
                 document.querySelectorAll('.owner-only').forEach(el => {
-                    if (el.classList.contains('import-options')) {
-                        el.style.display = 'flex';
-                    } else {
-                        el.style.display = 'inline-block';
-                    }
+                    el.style.display = el.classList.contains('import-options') ? 'flex' : 'inline-block';
                 });
                 document.getElementById('ownerLockBtn').textContent = '🔓';
                 document.getElementById('ownerLockBtn').title = '擁有者已登入（點此登出）';
-                displayData();
             } else {
-                alert('密碼錯誤。');
+                document.getElementById('ownerLockBtn').textContent = '👤';
+                document.getElementById('ownerLockBtn').title = '已登入（點此登出）';
             }
+            loadDataFromCloud();
         }
 
-        window.addEventListener('DOMContentLoaded', loadDataFromCloud);
+        window.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session && session.user) {
+                isLoggedIn = true;
+                isOwner = (session.user.email.toLowerCase() === OWNER_EMAIL.toLowerCase());
+                if (isOwner) {
+                    document.querySelectorAll('.owner-only').forEach(el => {
+                        el.style.display = el.classList.contains('import-options') ? 'flex' : 'inline-block';
+                    });
+                    document.getElementById('ownerLockBtn').textContent = '🔓';
+                    document.getElementById('ownerLockBtn').title = '擁有者已登入（點此登出）';
+                } else {
+                    document.getElementById('ownerLockBtn').textContent = '👤';
+                    document.getElementById('ownerLockBtn').title = '已登入（點此登出）';
+                }
+                loadDataFromCloud();
+            } else {
+                document.getElementById('dictionaryContainer').innerHTML =
+                    '<div class="empty-state">請登入以查看詞庫內容。<br><a href="/register" style="color:#3498db;">還沒有帳號？點此註冊 →</a></div>';
+                document.getElementById('statusText').innerText = '';
+            }
+        });
         document.getElementById('csvFileInput').addEventListener('change', handleCsvImport);
         document.getElementById('searchInput').addEventListener('input', displayData);
         document.getElementById('sortSelect').addEventListener('change', displayData);
