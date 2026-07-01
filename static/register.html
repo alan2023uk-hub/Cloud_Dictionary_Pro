@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>詞彙庫 雲端版 — 註冊</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border: #e1e8ed;
+            --ok: #27ae60;
+            --err: #e74c3c;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.7;
+            font-size: 22px;
+        }
+        h2 { color: var(--primary); text-align: center; margin-bottom: 10px; font-size: 1.8em; }
+        .subtitle { text-align: center; color: var(--text-muted); font-size: 0.7em; margin-bottom: 25px; }
+
+        /* Empty dictionary preview (matches index.html look, read-only) */
+        .controls {
+            display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px;
+            background: #fff; padding: 20px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); opacity: 0.6; pointer-events: none;
+        }
+        #searchInput {
+            width: 100%; padding: 12px 15px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 20px; box-sizing: border-box;
+            background-color: white;
+        }
+        .empty-state { text-align: center; color: var(--text-muted); padding: 40px 0;
+            background: #fff; border-radius: 12px; margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        /* Registration panel */
+        .panel {
+            background: #fff; padding: 24px 20px; border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;
+        }
+        .panel h3 { color: var(--primary); margin-top: 0; font-size: 1.2em; text-align: center; }
+        label.field-label { display:block; font-size:0.85em; color:var(--text-muted); margin-bottom:4px; font-weight:600; }
+        input[type=email], input[type=password] {
+            width: 100%; padding: 12px 14px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 1em; box-sizing: border-box;
+            font-family: inherit; margin-bottom: 14px;
+        }
+        input[type=email]:focus, input[type=password]:focus { outline: none; border-color: var(--accent); }
+        .primary-btn {
+            display:block; width:100%; padding:13px 20px; border-radius:8px; border:none;
+            background-color:var(--accent); color:#fff; font-weight:bold; font-size:1em;
+            cursor:pointer; box-shadow:0 4px 6px rgba(52,152,219,0.25);
+        }
+        .primary-btn:hover { opacity: 0.92; }
+        .primary-btn:disabled { background-color:#95a5a6; box-shadow:none; cursor:not-allowed; }
+        .msg-box { margin-top: 14px; font-size: 0.85em; text-align: center; min-height: 24px; }
+        .nav { text-align: center; margin-top: 20px; }
+        .nav a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <h2>📚 詞彙庫 雲端版</h2>
+    <div class="subtitle">請先註冊帳號以查看詞庫內容<br>Please register an account to view the dictionary</div>
+
+    <!-- Empty dictionary preview -->
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="🔍 搜尋單字、翻譯或例句內容..." disabled>
+    </div>
+    <div class="empty-state">找不到相符的詞彙或資料庫目前為空。</div>
+
+    <!-- Registration form -->
+    <div class="panel">
+        <h3>✉️ 註冊新帳號 / Register</h3>
+        <div style="background:#f4f6f7; border-radius:8px; padding:12px 14px; margin-bottom:18px; font-size:0.6em; line-height:1.6; color:var(--text-muted);">
+            🔒 您的電子郵件及密碼透過 Supabase（本系統的資料庫服務）安全儲存，僅用於此詞庫系統的存取控制，不會用於其他用途或提供予無關的第三方。<br>
+            🔒 Your email and password are securely stored via Supabase (this system's database provider) and used solely for access control to this dictionary. They will not be used for any other purpose or shared with unrelated third parties.
+        </div>
+        <label class="field-label" for="regEmail">電子郵件 / Email</label>
+        <input type="email" id="regEmail" placeholder="your@email.com" autocomplete="email">
+        <label class="field-label" for="regPassword">設定密碼 / Set Password</label>
+        <input type="password" id="regPassword" placeholder="至少 6 個字元 / At least 6 characters" autocomplete="new-password">
+        <label class="field-label" for="regPasswordConfirm">確認密碼 / Confirm Password</label>
+        <input type="password" id="regPasswordConfirm" placeholder="再次輸入密碼 / Re-enter password" autocomplete="new-password">
+        <button class="primary-btn" id="registerBtn">註冊 / Register ✉️</button>
+        <div class="msg-box" id="regMsg"></div>
+    </div>
+
+    <div class="nav"><a href="/">📚 已有帳號？返回詞庫 / Already have an account? Back to dictionary →</a></div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+        const SUPABASE_URL = 'https://rdxtwzyebyllsuqajwcp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkeHR3enllYnlsbHN1cWFqd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjE5MjcsImV4cCI6MjA5ODEzNzkyN30.iu_-J6S9vEpisMV1nhtepNilsMCacZdvmXehzIOIxdk';
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const regBtn = document.getElementById('registerBtn');
+        const msg = document.getElementById('regMsg');
+
+        regBtn.addEventListener('click', async () => {
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regPasswordConfirm').value;
+
+            msg.textContent = '';
+            if (!email) { msg.style.color = '#e74c3c'; msg.textContent = '請輸入電子郵件地址。 / Please enter your email.'; return; }
+            if (password.length < 6) { msg.style.color = '#e74c3c'; msg.textContent = '密碼至少需要 6 個字元。 / Password must be at least 6 characters.'; return; }
+            if (password !== confirm) { msg.style.color = '#e74c3c'; msg.textContent = '兩次輸入的密碼不一致。 / Passwords do not match.'; return; }
+
+            regBtn.disabled = true;
+            regBtn.textContent = '註冊中... / Registering...';
+
+            const { data, error } = await supabase.auth.signUp({ email, password });
+
+            if (error) {
+                msg.style.color = '#e74c3c';
+                msg.textContent = '❌ ' + error.message;
+                regBtn.disabled = false;
+                regBtn.textContent = '註冊 / Register ✉️';
+                return;
+            }
+
+            msg.style.color = '#27ae60';
+            msg.textContent = '✅ 註冊成功！正在前往詞庫... / Registration successful! Redirecting...';
+            setTimeout(() => { window.location.href = '/'; }, 1500);
+        });
+    </script>
+</body>
+</html>
