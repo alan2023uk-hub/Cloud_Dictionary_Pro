@@ -22,7 +22,7 @@
             margin: 0 auto;
             padding: 20px;
             line-height: 1.7;
-            font-size: 22px;
+            font-size: 20px;
         }
         h2 { color: var(--primary); text-align: center; margin-bottom: 10px; font-size: 1.8em; }
         .controls { 
@@ -97,7 +97,7 @@
         .toggle-btn:hover { opacity: 0.8; }
         
         /* Collapsed view: hide card content, show only title */
-        body.collapsed-view .card { padding: 0; box-shadow: none; margin-bottom: 0px; background: transparent; }
+        body.collapsed-view .card { padding: 0; box-shadow: none; margin-bottom: 1px; background: transparent; }
         body.collapsed-view .word-title { font-size: 1.1em; margin: 0; padding: 4px 0; cursor: pointer; color: var(--accent); text-decoration: underline; }
         body.collapsed-view .word-title:hover { opacity: 0.8; }
         body.collapsed-view .card-header { margin-bottom: 0; }
@@ -111,6 +111,9 @@
         body.collapsed-view .card.expanded .section,
         body.collapsed-view .card.expanded .ipa { display: block; }
         body.collapsed-view .card.expanded { padding: 20px 0; background: transparent; box-shadow: none; margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; }
+        
+        /* Expanded view: extend cards to use full width */
+        body:not(.collapsed-view) .card { margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; }
         
         /* Text size variations */
         body.size-small { font-size: 16px; }
