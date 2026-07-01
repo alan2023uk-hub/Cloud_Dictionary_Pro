@@ -89,11 +89,40 @@
         .empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
         .status-text { text-align: right; font-size: 1em; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px; }
         .owner-only { display: none; }
+        
+        /* View toggle buttons */
+        .view-toggles { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .toggle-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #bdc3c7; background: #fff; cursor: pointer; font-size: 0.9em; font-weight: 600; color: var(--primary); transition: all 0.2s; }
+        .toggle-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .toggle-btn:hover { opacity: 0.8; }
+        
+        /* Collapsed view: hide card content, show only title */
+        body.collapsed-view .card { padding: 0; box-shadow: none; margin-bottom: 8px; background: transparent; }
+        body.collapsed-view .word-title { font-size: 1.1em; margin: 0; padding: 12px 0; }
+        body.collapsed-view .card-header { margin-bottom: 0; }
+        body.collapsed-view .translation, 
+        body.collapsed-view .tags,
+        body.collapsed-view .section,
+        body.collapsed-view .ipa { display: none; }
+        
+        /* Text size variations */
+        body.size-small { font-size: 18px; }
+        body.size-large { font-size: 26px; }
     </style>
 </head>
 <body>
 
     <h2>📚 詞彙庫 雲端版</h2>
+    
+    <div class="view-toggles">
+        <button class="toggle-btn active" id="viewExpandBtn" title="展開全部">📖 展開</button>
+        <button class="toggle-btn" id="viewCollapseBtn" title="只顯示詞語">📋 收起</button>
+        <span style="width:100%; height:1px; background:#e1e8ed; margin:0 -10px;"></span>
+        <button class="toggle-btn active" id="sizeNormalBtn" title="標準文字大小">A 標準</button>
+        <button class="toggle-btn" id="sizeSmallBtn" title="縮小文字">A- 縮小</button>
+        <button class="toggle-btn" id="sizeLargeBtn" title="放大文字">A+ 放大</button>
+    </div>
+    
     <div style="text-align:center; margin-bottom:20px; display:flex; justify-content:center; align-items:center; gap:15px;">
         <a href="/add" style="color:#3498db; text-decoration:none; font-weight:600;">➕ 新增詞語</a>
         <span id="ownerLockBtn" title="登入 / Login" style="cursor:pointer; font-size:1em; color:#bdc3c7; user-select:none;" onclick="promptOwnerLogin()">🔒</span>
@@ -236,6 +265,63 @@
         document.getElementById('deleteBtn').addEventListener('click', deleteSelected);
         document.getElementById('clearBtn').addEventListener('click', clearDictionary);
         document.getElementById('exportBtn').addEventListener('click', exportCSV);
+
+        // View toggle handlers
+        document.getElementById('viewExpandBtn').addEventListener('click', () => {
+            document.body.classList.remove('collapsed-view');
+            document.getElementById('viewExpandBtn').classList.add('active');
+            document.getElementById('viewCollapseBtn').classList.remove('active');
+            localStorage.setItem('dict-view', 'expanded');
+        });
+        document.getElementById('viewCollapseBtn').addEventListener('click', () => {
+            document.body.classList.add('collapsed-view');
+            document.getElementById('viewCollapseBtn').classList.add('active');
+            document.getElementById('viewExpandBtn').classList.remove('active');
+            localStorage.setItem('dict-view', 'collapsed');
+        });
+
+        // Size toggle handlers
+        document.getElementById('sizeSmallBtn').addEventListener('click', () => {
+            document.body.classList.remove('size-large');
+            document.body.classList.add('size-small');
+            document.getElementById('sizeSmallBtn').classList.add('active');
+            document.getElementById('sizeNormalBtn').classList.remove('active');
+            document.getElementById('sizeLargeBtn').classList.remove('active');
+            localStorage.setItem('dict-size', 'small');
+        });
+        document.getElementById('sizeNormalBtn').addEventListener('click', () => {
+            document.body.classList.remove('size-small', 'size-large');
+            document.getElementById('sizeNormalBtn').classList.add('active');
+            document.getElementById('sizeSmallBtn').classList.remove('active');
+            document.getElementById('sizeLargeBtn').classList.remove('active');
+            localStorage.setItem('dict-size', 'normal');
+        });
+        document.getElementById('sizeLargeBtn').addEventListener('click', () => {
+            document.body.classList.remove('size-small');
+            document.body.classList.add('size-large');
+            document.getElementById('sizeLargeBtn').classList.add('active');
+            document.getElementById('sizeNormalBtn').classList.remove('active');
+            document.getElementById('sizeSmallBtn').classList.remove('active');
+            localStorage.setItem('dict-size', 'large');
+        });
+
+        // Restore saved preferences on page load
+        const savedView = localStorage.getItem('dict-view') || 'expanded';
+        const savedSize = localStorage.getItem('dict-size') || 'normal';
+        if (savedView === 'collapsed') {
+            document.body.classList.add('collapsed-view');
+            document.getElementById('viewCollapseBtn').classList.add('active');
+            document.getElementById('viewExpandBtn').classList.remove('active');
+        }
+        if (savedSize === 'small') {
+            document.body.classList.add('size-small');
+            document.getElementById('sizeSmallBtn').classList.add('active');
+            document.getElementById('sizeNormalBtn').classList.remove('active');
+        } else if (savedSize === 'large') {
+            document.body.classList.add('size-large');
+            document.getElementById('sizeLargeBtn').classList.add('active');
+            document.getElementById('sizeNormalBtn').classList.remove('active');
+        }
 
         async function loadDataFromCloud() {
             document.getElementById('statusText').innerText = '正在讀取雲端資料...';
