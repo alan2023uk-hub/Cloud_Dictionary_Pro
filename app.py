@@ -14,7 +14,13 @@ Supabase 的新增/查重複/刪除仍然交給前端用 anon key 直接呼叫
 部署：Render Web Service
   Build Command : pip install -r requirements.txt
   Start Command : gunicorn app:app
-  環境變數      : DEEPSEEK_API_KEY, GEMINI_API_KEY, AI_MODEL（可選）
+  環境變數      : DEEPSEEK_API_KEY, GEMINI_API_KEY, GROQ_API_KEY, AI_MODEL（可選）
+
+Groq 並非自家模型公司，而是把開源模型（如 OpenAI 開源版 GPT-OSS、
+Meta Llama、Alibaba Qwen 等）跑在自家高速硬體上的推論平台。
+實際使用的底層模型由 GROQ_MODEL 環境變數控制，預設為
+openai/gpt-oss-120b，前端會將此資訊顯示給使用者，避免誤以為
+「Groq」本身就是模型名稱。
 """
 
 import json
@@ -35,6 +41,8 @@ CORS(app)  # 如果前端日後改放到別的網域（例如 GitHub Pages），
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 DEFAULT_MODEL = os.getenv("AI_MODEL", "deepseek").lower()
 MAX_RETRIES = 2
 
@@ -139,8 +147,41 @@ def call_gemini(word: str) -> dict:
     return extract_json(raw)
 
 
+def call_groq(word: str) -> dict:
+    system_prompt = build_system_prompt("Groq")
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    payload = json.dumps({
+        "model": GROQ_MODEL,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"請查詢這個單字：{word}"},
+        ],
+        "temperature": 0.3,
+        "max_tokens": 3000,
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=90) as resp:
+        body = json.loads(resp.read().decode("utf-8"))
+
+    raw = body["choices"][0]["message"]["content"]
+    return extract_json(raw)
+
+
 def call_ai(word: str, model: str) -> dict:
-    return call_gemini(word) if model == "gemini" else call_deepseek(word)
+    if model == "gemini":
+        return call_gemini(word)
+    if model == "groq":
+        return call_groq(word)
+    return call_deepseek(word)
 
 
 def validate_entry(entry: dict, word: str) -> list:
@@ -175,12 +216,19 @@ def serve_add_page():
     return send_from_directory(app.static_folder, "input.html")
 
 
+@app.get("/register")
+def serve_register_page():
+    return send_from_directory(app.static_folder, "register.html")
+
+
 @app.get("/api/health")
 def health():
     return jsonify({
         "ok": True,
         "deepseek_configured": bool(DEEPSEEK_API_KEY),
         "gemini_configured": bool(GEMINI_API_KEY),
+        "groq_configured": bool(GROQ_API_KEY),
+        "groq_underlying_model": GROQ_MODEL,
         "default_model": DEFAULT_MODEL,
     })
 
@@ -192,12 +240,14 @@ def lookup():
     model = (data.get("model") or DEFAULT_MODEL).lower()
     if not word:
         return jsonify({"ok": False, "error": "word 不可為空"}), 400
-    if model not in ("deepseek", "gemini"):
+    if model not in ("deepseek", "gemini", "groq"):
         model = DEFAULT_MODEL
     if model == "deepseek" and not DEEPSEEK_API_KEY:
         return jsonify({"ok": False, "error": "伺服器未設定 DEEPSEEK_API_KEY"}), 500
     if model == "gemini" and not GEMINI_API_KEY:
         return jsonify({"ok": False, "error": "伺服器未設定 GEMINI_API_KEY"}), 500
+    if model == "groq" and not GROQ_API_KEY:
+        return jsonify({"ok": False, "error": "伺服器未設定 GROQ_API_KEY"}), 500
 
     last_errors = []
     entry = None
