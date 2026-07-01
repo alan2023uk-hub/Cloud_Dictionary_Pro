@@ -106,6 +106,17 @@ const SUPABASE_URL = 'https://rdxtwzyebyllsuqajwcp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkeHR3enllYnlsbHN1cWFqd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjE5MjcsImV4cCI6MjA5ODEzNzkyN30.iu_-J6S9vEpisMV1nhtepNilsMCacZdvmXehzIOIxdk';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const OWNER_EMAIL = 'alan2023uk@gmail.com';
+
+(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const isOwner = session && session.user && session.user.email.toLowerCase() === OWNER_EMAIL.toLowerCase();
+    if (!isOwner) {
+        const deepseekOpt = document.querySelector('#modelSelect option[value="deepseek"]');
+        if (deepseekOpt) deepseekOpt.remove();
+    }
+})();
+
 const FIELDS = [
     "word_or_phrase","translation","meaning","part_of_speech","pronunciation_ipa",
     "derived_or_related","relationship_menu","cross_reference","entry_type",
